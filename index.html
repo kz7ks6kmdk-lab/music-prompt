@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI音乐提示词生成器</title>
+<meta name="description" content="AI音乐提示词生成器，一键生成Suno、Udio双语音乐prompt">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        primary: '#6366f1',
+      }
+    }
+  }
+}
+</script>
+<style type="text/tailwindcss">
+@layer utilities {
+  .tag-active {
+    @apply bg-primary text-white border-primary;
+  }
+  .tag-item {
+    @apply border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-full cursor-pointer transition-all hover:border-primary;
+  }
+}
+</style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <header class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold">AI音乐提示词生成器</h1>
+      <p class="text-gray-500 dark:text-gray-400">适配 Suno / Udio，一键生成双语音乐提示词</p>
+    </div>
+    <button id="toggleDark" class="text-xl p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800" title="切换深色/浅色模式">
+      <i class="fa fa-moon-o dark:hidden"></i>
+      <i class="fa fa-sun-o hidden dark:inline"></i>
+    </button>
+  </header>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <!-- 配置面板 -->
+    <div class="space-y-6">
+      <!-- 曲风 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow">
+        <h3 class="font-semibold mb-3">🎵 音乐风格</h3>
+        <div class="flex flex-wrap gap-2" id="styleGroup">
+          <span class="tag-item" data-en="Pop">流行</span>
+          <span class="tag-item" data-en="Folk">民谣</span>
+          <span class="tag-item" data-en="Rock">摇滚</span>
+          <span class="tag-item" data-en="R&amp;B">R&amp;B</span>
+          <span class="tag-item" data-en="Electronic">电子</span>
+          <span class="tag-item" data-en="GuFeng (Chinese ancient style)">古风</span>
+          <span class="tag-item" data-en="Jazz">爵士</span>
+          <span class="tag-item" data-en="Blues">布鲁斯</span>
+          <span class="tag-item" data-en="Instrumental">纯音乐</span>
+          <span class="tag-item" data-en="Rap">说唱</span>
+        </div>
+      </div>
+      <!-- 情绪 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow">
+        <h3 class="font-semibold mb-3">💭 情绪氛围</h3>
+        <div class="flex flex-wrap gap-2" id="moodGroup">
+          <span class="tag-item" data-en="Healing">治愈</span>
+          <span class="tag-item" data-en="Sad">伤感</span>
+          <span class="tag-item" data-en="Happy">欢快</span>
+          <span class="tag-item" data-en="Calm">静谧</span>
+          <span class="tag-item" data-en="Passionate">热血</span>
+          <span class="tag-item" data-en="Romantic">浪漫</span>
+          <span class="tag-item" data-en="Lonely">孤独</span>
+          <span class="tag-item" data-en="Ethereal">空灵</span>
+        </div>
+      </div>
+      <!-- BPM速度 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow">
+        <h3 class="font-semibold mb-3">⏱️ BPM 速度</h3>
+        <div class="flex flex-wrap gap-2" id="bpmGroup">
+          <span class="tag-item" data-en="60-80 BPM, slow tempo">慢板 60-80</span>
+          <span class="tag-item" data-en="80-110 BPM, moderate tempo">中速 80-110</span>
+          <span class="tag-item" data-en="110-130 BPM, upbeat">轻快 110-130</span>
+          <span class="tag-item" data-en="130+ BPM, fast tempo">快节奏 130+</span>
+        </div>
+      </div>
+      <!-- 乐器 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow">
+        <h3 class="font-semibold mb-3">🎹 乐器</h3>
+        <div class="flex flex-wrap gap-2" id="instGroup">
+          <span class="tag-item" data-en="Piano">钢琴</span>
+          <span class="tag-item" data-en="Guitar">吉他</span>
+          <span class="tag-item" data-en="Strings">弦乐</span>
+          <span class="tag-item" data-en="Drums">鼓组</span>
+          <span class="tag-item" data-en="Bass">贝斯</span>
+          <span class="tag-item" data-en="Flute">笛子</span>
+          <span class="tag-item" data-en="Guzheng">古筝</span>
+          <span class="tag-item" data-en="Synth">合成器</span>
+        </div>
+      </div>
+      <!-- 人声 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow">
+        <h3 class="font-semibold mb-3">🎤 人声</h3>
+        <div class="flex flex-wrap gap-2" id="vocalGroup">
+          <span class="tag-item" data-en="Male vocal">男声</span>
+          <span class="tag-item" data-en="Female vocal">女声</span>
+          <span class="tag-item" data-en="Clean voice">清澈</span>
+          <span class="tag-item" data-en="Husky voice">沙哑</span>
+          <span class="tag-item" data-en="Breathy voice">气声</span>
+          <span class="tag-item" data-en="No vocal, instrumental">无人声</span>
+        </div>
+      </div>
+      <!-- 混音质感 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow">
+        <h3 class="font-semibold mb-3">🎛️ 混音质感</h3>
+        <div class="flex flex-wrap gap-2" id="mixGroup">
+          <span class="tag-item" data-en="Hi-Fi, high quality">高保真</span>
+          <span class="tag-item" data-en="Live feel">现场感</span>
+          <span class="tag-item" data-en="Lo-fi">复古低保真</span>
+          <span class="tag-item" data-en="Wide soundstage">开阔声场</span>
+          <span class="tag-item" data-en="Clean mix">干净通透</span>
+        </div>
+      </div>
+      <!-- 自定义补充 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow">
+        <h3 class="font-semibold mb-3">✍️ 自定义补充描述</h3>
+        <textarea id="customInput" class="w-full rounded-lg border dark:bg-gray-700 dark:border-gray-600 p-3 outline-none focus:border-primary" rows="3" placeholder="额外描述，例如：雨天、星空、叙事感、电影配乐..."></textarea>
+      </div>
+      <div class="flex gap-3">
+        <button id="genBtn" class="flex-1 bg-primary hover:bg-indigo-500 text-white py-3 rounded-lg font-medium">
+          <i class="fa fa-magic mr-1"></i> 生成提示词
+        </button>
+        <button id="resetBtn" class="px-5 border dark:border-gray-600 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+          重置
+        </button>
+      </div>
+    </div>
+
+    <!-- 结果面板 -->
+    <div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-5 shadow sticky top-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-semibold">📝 生成结果</h3>
+          <button id="copyBtn" class="text-primary hover:text-indigo-500">
+            <i class="fa fa-copy"></i> 复制英文Prompt
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">中文描述</div>
+            <div id="cnResult" class="min-h-[80px] p-3 bg-gray-50 dark:bg-gray-700 rounded-lg break-words whitespace-pre-wrap">等待生成...</div>
+          </div>
+          <div>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">英文Prompt（直接粘贴Suno/Udio）</div>
+            <div id="enResult" class="min-h-[120px] p-3 bg-gray-50 dark:bg-gray-700 rounded-lg break-words whitespace-pre-wrap">等待生成...</div>
+          </div>
+        </div>
+        <div id="tipMsg" class="mt-4 text-green-500 text-sm hidden">✅ 已复制！</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 深色模式
+const html = document.documentElement;
+const toggleDark = document.getElementById('toggleDark');
+if(localStorage.getItem('dark') === '1') html.classList.add('dark');
+toggleDark.onclick = ()=>{
+  html.classList.toggle('dark');
+  localStorage.setItem('dark', html.classList.contains('dark') ? '1' : '0');
+};
+
+// 标签点击逻辑
+const groups = ['styleGroup','moodGroup','bpmGroup','instGroup','vocalGroup','mixGroup'];
+const selected = {};
+groups.forEach(g=> selected[g] = []);
+
+groups.forEach(gid=>{
+  const wrap = document.getElementById(gid);
+  const tags = wrap.querySelectorAll('.tag-item');
+  tags.forEach(tag=>{
+    tag.onclick = ()=>{
+      tag.classList.toggle('tag-active');
+      if(tag.classList.contains('tag-active')){
+        selected[gid].push(tag);
+      }else{
+        selected[gid] = selected[gid].filter(t=>t!==tag);
+      }
+    }
+  })
+})
+
+// 生成
+const genBtn = document.getElementById('genBtn');
+const resetBtn = document.getElementById('resetBtn');
+const copyBtn = document.getElementById('copyBtn');
+const cnResult = document.getElementById('cnResult');
+const enResult = document.getElementById('enResult');
+const customInput = document.getElementById('customInput');
+const tipMsg = document.getElementById('tipMsg');
+
+genBtn.onclick = ()=>{
+  const cnList = [];
+  const enList = [];
+  const sections = [
+    ['曲风', selected.styleGroup],
+    ['氛围', selected.moodGroup],
+    ['速度', selected.bpmGroup],
+    ['配器', selected.instGroup],
+    ['人声', selected.vocalGroup],
+    ['混音', selected.mixGroup]
+  ];
+
+  sections.forEach(([label, tags])=>{
+    if(tags.length){
+      cnList.push(label + '：' + tags.map(t=>t.innerText.trim()).join('、'));
+      tags.forEach(t=> enList.push(t.dataset.en || t.innerText.trim()));
+    }
+  });
+
+  const custom = customInput.value.trim();
+  if(custom){
+    cnList.push('补充：' + custom);
+    enList.push(custom);
+  }
+
+  cnResult.innerText = cnList.length ? cnList.join('；') : '请至少选择一项标签';
+  enResult.innerText = enList.length ? enList.join(', ') : '请至少选择一项标签';
+}
+
+resetBtn.onclick = ()=>{
+  groups.forEach(gid=>{
+    selected[gid] = [];
+    document.getElementById(gid).querySelectorAll('.tag-item').forEach(t=>t.classList.remove('tag-active'));
+  })
+  customInput.value = '';
+  cnResult.innerText = '等待生成...';
+  enResult.innerText = '等待生成...';
+}
+
+copyBtn.onclick = async ()=>{
+  const text = enResult.innerText;
+  if(!text || text === '等待生成...') return;
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(e){
+    // 兼容非HTTPS环境：使用兜底复制
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  tipMsg.classList.remove('hidden');
+  setTimeout(()=>tipMsg.classList.add('hidden'),1200);
+}
+</script>
+</body>
+</html>
